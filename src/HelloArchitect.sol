@@ -18,7 +18,7 @@ contract HelloArchitect {
 
     // Mapping to store the last time a user updated the greeting
     mapping(address => uint256) public lastUpdateAt;
-    
+
     // Cooldown duration: 60 seconds
     uint256 public constant COOLDOWN_TIME = 60;
 
@@ -41,10 +41,10 @@ contract HelloArchitect {
         );
 
         currentGreeting = newGreeting;
-        
+
         // Update the last message timestamp for this user
         lastUpdateAt[msg.sender] = block.timestamp;
-        
+
         history.push(Message(msg.sender, newGreeting, block.timestamp));
         emit GreetingChanged(msg.sender, newGreeting);
     }
