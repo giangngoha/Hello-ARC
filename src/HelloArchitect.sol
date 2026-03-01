@@ -2,54 +2,69 @@
 pragma solidity ^0.8.30;
 
 /**
- * @title HelloArchitect
- * @dev A simple contract to manage a greeting with ownership access control.
+ * @title HelloArchitect_v3
+ * @dev A contract that keeps a history of all greetings set by users.
  */
 contract HelloArchitect {
-    string private greeting;
-    address public owner; // Variable to store the address of the owner
+    // Structure to store message details
+    struct Message {
+        address sender;    // Who sent the greeting
+        string text;       // The greeting content
+        uint256 timestamp; // When it was sent
+    }
 
-    // Event emitted when the greeting is updated
+    string private currentGreeting;
+    address public owner;
+    
+    // An array to store all previous messages
+    Message[] public history;
+
     event GreetingChanged(address indexed changedBy, string newGreeting);
 
-    /**
-     * @dev Throws if called by any account other than the owner.
-     */
     modifier onlyOwner() {
         require(msg.sender == owner, "Caller is not the owner");
         _;
     }
 
-    /**
-     * @dev Set the initial greeting and the deployer as the owner.
-     */
     constructor() {
-        owner = msg.sender; // The account that deploys the contract becomes the owner
-        greeting = "Hello Architect!";
+        owner = msg.sender;
+        currentGreeting = "Hello Architect!";
+        
+        // Save the initial greeting to history
+        history.push(Message(msg.sender, currentGreeting, block.timestamp));
     }
 
     /**
-     * @dev Update the greeting message. Only accessible by the owner.
-     * @param newGreeting The new string to be stored as a greeting.
+     * @dev Update greeting and save it to the history list.
+     * Note: In this version, anyone can set a greeting to build a guestbook!
+     * (Removed onlyOwner to allow everyone to participate)
      */
-    function setGreeting(string memory newGreeting) public onlyOwner {
-        greeting = newGreeting;
+    function setGreeting(string memory newGreeting) public {
+        currentGreeting = newGreeting;
+        
+        // Add the new record to the history array
+        history.push(Message(msg.sender, newGreeting, block.timestamp));
+        
         emit GreetingChanged(msg.sender, newGreeting);
     }
 
-    /**
-     * @dev Returns the current greeting message.
-     */
     function getGreeting() public view returns (string memory) {
-        return greeting;
+        return currentGreeting;
     }
 
     /**
-     * @dev Transfers ownership of the contract to a new account.
-     * @param newOwner The address to transfer ownership to.
+     * @dev Returns the total number of greetings in history.
      */
-    function transferOwnership(address newOwner) public onlyOwner {
-        require(newOwner != address(0), "New owner is the zero address");
-        owner = newOwner;
+    function getHistoryCount() public view returns (uint256) {
+        return history.length;
+    }
+
+    /**
+     * @dev Get a specific message from history by index.
+     */
+    function getMessageAt(uint256 index) public view returns (address, string memory, uint256) {
+        require(index < history.length, "Index out of bounds");
+        Message memory m = history[index];
+        return (m.sender, m.text, m.timestamp);
     }
 }
