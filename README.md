@@ -48,7 +48,12 @@ $ anvil
 ### Deploy
 
 ```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
+$ source .env
+
+forge create src/HelloArchitect.sol:HelloArchitect \
+  --rpc-url $ARC_TESTNET_RPC_URL \
+  --private-key $PRIVATE_KEY \
+  --broadcast
 ```
 
 ### Cast
@@ -64,3 +69,4 @@ $ forge --help
 $ anvil --help
 $ cast --help
 ```
+
