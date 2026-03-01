@@ -2,49 +2,50 @@
 pragma solidity ^0.8.30;
 
 /**
- * @title HelloArchitect_v3
- * @dev A contract that keeps a history of all greetings set by users.
+ * @title HelloArchitect_v4
+ * @dev Added Cooldown feature: Each user can only set a greeting once every 60 seconds.
  */
 contract HelloArchitect {
-    // Structure to store message details
     struct Message {
-        address sender;    // Who sent the greeting
-        string text;       // The greeting content
-        uint256 timestamp; // When it was sent
+        address sender;
+        string text;
+        uint256 timestamp;
     }
 
     string private currentGreeting;
     address public owner;
-    
-    // An array to store all previous messages
     Message[] public history;
 
-    event GreetingChanged(address indexed changedBy, string newGreeting);
+    // Mapping to store the last time a user updated the greeting
+    mapping(address => uint256) public lastUpdateAt;
+    
+    // Cooldown duration: 60 seconds
+    uint256 public constant COOLDOWN_TIME = 60;
 
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Caller is not the owner");
-        _;
-    }
+    event GreetingChanged(address indexed changedBy, string newGreeting);
 
     constructor() {
         owner = msg.sender;
         currentGreeting = "Hello Architect!";
-        
-        // Save the initial greeting to history
         history.push(Message(msg.sender, currentGreeting, block.timestamp));
     }
 
     /**
-     * @dev Update greeting and save it to the history list.
-     * Note: In this version, anyone can set a greeting to build a guestbook!
-     * (Removed onlyOwner to allow everyone to participate)
+     * @dev Set greeting with a cooldown check.
      */
     function setGreeting(string memory newGreeting) public {
+        // Check if the user is still in cooldown
+        require(
+            block.timestamp >= lastUpdateAt[msg.sender] + COOLDOWN_TIME,
+            "Wait 1 minute before sending another greeting!"
+        );
+
         currentGreeting = newGreeting;
         
-        // Add the new record to the history array
-        history.push(Message(msg.sender, newGreeting, block.timestamp));
+        // Update the last message timestamp for this user
+        lastUpdateAt[msg.sender] = block.timestamp;
         
+        history.push(Message(msg.sender, newGreeting, block.timestamp));
         emit GreetingChanged(msg.sender, newGreeting);
     }
 
@@ -52,16 +53,10 @@ contract HelloArchitect {
         return currentGreeting;
     }
 
-    /**
-     * @dev Returns the total number of greetings in history.
-     */
     function getHistoryCount() public view returns (uint256) {
         return history.length;
     }
 
-    /**
-     * @dev Get a specific message from history by index.
-     */
     function getMessageAt(uint256 index) public view returns (address, string memory, uint256) {
         require(index < history.length, "Index out of bounds");
         Message memory m = history[index];
